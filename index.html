@@ -1,0 +1,1978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RewardX Admin Console</title>
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+  <style>
+    :root {
+      --bg-primary: #071426;
+      --bg-secondary: #0B1D33;
+      --surface: #102742;
+      --surface-elevated: #153451;
+      --electric-blue: #168BFF;
+      --bright-blue: #42B6FF;
+      --orange: #FF8A24;
+      --success: #25C786;
+      --warning: #FFC247;
+      --error: #FF5B64;
+      --text-primary: #F4F8FF;
+      --text-secondary: #A8B9CC;
+      --divider: #24415E;
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.45;
+    }
+    a { color: var(--bright-blue); }
+    button, input, select, textarea {
+      font: inherit;
+      color: var(--text-primary);
+    }
+    .hidden { display: none !important; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      min-height: 40px;
+      transition: transform 0.12s ease, opacity 0.12s ease, background 0.15s ease;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary { background: var(--electric-blue); color: #fff; }
+    .btn-orange { background: var(--orange); color: #071426; }
+    .btn-success { background: var(--success); color: #071426; }
+    .btn-danger { background: var(--error); color: #fff; }
+    .btn-ghost { background: var(--surface-elevated); border-color: var(--divider); }
+    .btn-sm { padding: 6px 10px; min-height: 32px; font-size: 0.8rem; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      background: rgba(22, 139, 255, 0.18);
+      color: var(--bright-blue);
+    }
+    .badge.ok { background: rgba(37, 199, 134, 0.18); color: var(--success); }
+    .badge.warn { background: rgba(255, 194, 71, 0.18); color: var(--warning); }
+    .badge.err { background: rgba(255, 91, 100, 0.18); color: var(--error); }
+
+    /* Auth Gate */
+    .auth-gate {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: radial-gradient(circle at top right, rgba(22,139,255,0.18), transparent 45%),
+                  radial-gradient(circle at bottom left, rgba(255,138,36,0.14), transparent 45%),
+                  var(--bg-primary);
+    }
+    .auth-card {
+      width: 100%;
+      max-width: 460px;
+      background: var(--surface);
+      border: 1px solid var(--divider);
+      border-radius: 20px;
+      padding: 32px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+    }
+    .brand-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .brand-row img { width: 44px; height: 44px; }
+    .brand-title { font-size: 1.45rem; font-weight: 800; letter-spacing: -0.02em; }
+    .muted { color: var(--text-secondary); font-size: 0.9rem; }
+
+    /* App Layout */
+    .shell {
+      display: grid;
+      grid-template-columns: 270px 1fr;
+      min-height: 100vh;
+    }
+    .sidebar {
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--divider);
+      display: flex;
+      flex-direction: column;
+      max-height: 100vh;
+      position: sticky;
+      top: 0;
+    }
+    .sidebar-header {
+      padding: 18px 18px 12px;
+      border-bottom: 1px solid var(--divider);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .nav-scroll {
+      overflow-y: auto;
+      padding: 12px 10px 24px;
+      flex: 1;
+    }
+    .nav-group {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-secondary);
+      padding: 12px 10px 6px;
+    }
+    .nav-item {
+      width: 100%;
+      text-align: left;
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      padding: 9px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.87rem;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+    .nav-item:hover { background: var(--surface); color: var(--text-primary); }
+    .nav-item.active {
+      background: linear-gradient(90deg, rgba(22,139,255,0.28), rgba(22,139,255,0.08));
+      color: var(--text-primary);
+      border-left: 3px solid var(--electric-blue);
+    }
+
+    .main {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .topbar {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--divider);
+      padding: 14px 24px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+    .content {
+      padding: 24px;
+      max-width: 1440px;
+      width: 100%;
+      margin: 0 auto;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--divider);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-bottom: 18px;
+    }
+    .card-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .grid-kpi {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+    .kpi {
+      background: var(--surface);
+      border: 1px solid var(--divider);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+    .kpi-label { font-size: 0.78rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
+    .kpi-val { font-size: 1.7rem; font-weight: 800; margin-top: 4px; color: var(--text-primary); }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 16px;
+    }
+    .field { margin-bottom: 12px; }
+    .field label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 5px;
+    }
+    .field input, .field select, .field textarea {
+      width: 100%;
+      background: var(--bg-secondary);
+      border: 1px solid var(--divider);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 0.9rem;
+    }
+    .field textarea { min-height: 82px; resize: vertical; }
+    .field input:focus, .field select:focus, .field textarea:focus {
+      outline: 2px solid var(--electric-blue);
+      border-color: transparent;
+    }
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+    }
+    .checkbox-row input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--electric-blue);
+    }
+
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+    th, td {
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--divider);
+      vertical-align: top;
+    }
+    th {
+      color: var(--text-secondary);
+      font-size: 0.76rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      background: rgba(11, 29, 51, 0.55);
+    }
+    tr:hover td { background: rgba(21, 52, 81, 0.35); }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; }
+    .thumb {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      object-fit: cover;
+      background: var(--bg-secondary);
+      border: 1px solid var(--divider);
+    }
+    .alert {
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--divider);
+      background: rgba(22, 139, 255, 0.12);
+      margin-bottom: 14px;
+      font-size: 0.88rem;
+    }
+    .alert.warn { background: rgba(255, 194, 71, 0.14); border-color: rgba(255, 194, 71, 0.4); color: var(--warning); }
+    .alert.err { background: rgba(255, 91, 100, 0.14); border-color: rgba(255, 91, 100, 0.4); color: var(--error); }
+    .alert.ok { background: rgba(37, 199, 134, 0.14); border-color: rgba(37, 199, 134, 0.4); color: var(--success); }
+
+    .toast-bar {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 999;
+      background: var(--surface-elevated);
+      border: 1px solid var(--electric-blue);
+      color: var(--text-primary);
+      padding: 12px 18px;
+      border-radius: 12px;
+      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45);
+      max-width: 420px;
+    }
+    .notif-preview {
+      background: #0e1e36;
+      border: 1px solid var(--divider);
+      border-radius: 16px;
+      padding: 14px;
+      max-width: 360px;
+    }
+    .mobile-menu-btn { display: none; }
+    @media (max-width: 960px) {
+      .shell { grid-template-columns: 1fr; }
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 270px;
+        z-index: 50;
+        transform: translateX(-100%);
+        transition: transform 0.2s ease;
+      }
+      .sidebar.open { transform: translateX(0); }
+      .mobile-menu-btn { display: inline-flex; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 1. AUTH GATE (Firebase Google Sign-In + Admin Verification) -->
+  <section id="authGate" class="auth-gate">
+    <div class="auth-card">
+      <div class="brand-row">
+        <img src="./favicon.svg" alt="RewardX Logo" />
+        <div>
+          <div class="brand-title">RewardX Admin</div>
+          <div class="muted">Zero-Trust Operations Console</div>
+        </div>
+      </div>
+      <p class="muted" style="margin-bottom:18px;">
+        Sign in with an authorized Google Workspace / Firebase Admin account. Access is strictly enforced by Cloud Firestore Security Rules and Cloud Functions ID-token verification.
+      </p>
+      <div id="authError" class="alert err hidden"></div>
+      <button id="googleSignInBtn" class="btn btn-primary" style="width:100%;">
+        Sign in with Google
+      </button>
+      <div class="muted" style="margin-top:16px; font-size:0.78rem;">
+        Project: <span class="mono">gen-lang-client-0350068564</span><br/>
+        Database: <span class="mono">ai-studio-android-rewardx-22e8648e-b919-48fd-8a38-2431f8a1d12b</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. MAIN ADMIN SHELL -->
+  <div id="adminShell" class="shell hidden">
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-header">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <img src="./favicon.svg" alt="RX" style="width:32px;height:32px;" />
+          <div>
+            <div style="font-weight:800;font-size:1rem;">RewardX</div>
+            <div id="adminRoleLabel" class="muted" style="font-size:0.74rem;">ADMIN</div>
+          </div>
+        </div>
+        <button id="closeSidebarBtn" class="btn btn-ghost btn-sm mobile-menu-btn">✕</button>
+      </div>
+      <nav id="navList" class="nav-scroll" aria-label="Admin Navigation"></nav>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <button id="openSidebarBtn" class="btn btn-ghost btn-sm mobile-menu-btn">☰ Menu</button>
+          <div>
+            <h1 id="pageTitle" style="font-size:1.15rem;font-weight:800;">Dashboard</h1>
+            <div id="lastUpdatedLabel" class="muted" style="font-size:0.76rem;">Loading...</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <span id="adminEmailChip" class="badge"></span>
+          <button id="refreshBtn" class="btn btn-ghost btn-sm">Refresh</button>
+          <button id="signOutBtn" class="btn btn-danger btn-sm">Sign Out</button>
+        </div>
+      </header>
+
+      <div id="mainContent" class="content"></div>
+    </main>
+  </div>
+
+  <div id="toastBar" class="toast-bar hidden" role="status"></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+    import {
+      getAuth,
+      GoogleAuthProvider,
+      signInWithPopup,
+      signOut,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+    import {
+      getFirestore,
+      collection,
+      doc,
+      getDoc,
+      getDocs,
+      setDoc,
+      addDoc,
+      updateDoc,
+      deleteDoc,
+      query,
+      where,
+      orderBy,
+      limit,
+      getCountFromServer,
+      serverTimestamp,
+      Timestamp
+    } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+    // Firebase configuration sourced from provisioned project metadata
+    const firebaseConfig = {
+      apiKey: "AIzaSyAPHecynqAac1RcMHvmVuOczPx8MkzGgDw",
+      authDomain: "gen-lang-client-0350068564.firebaseapp.com",
+      projectId: "gen-lang-client-0350068564",
+      databaseURL: "https://gen-lang-client-0350068564-default-rtdb.asia-southeast1.firebasedatabase.app",
+      storageBucket: "gen-lang-client-0350068564.firebasestorage.app"
+    };
+
+    const FIRESTORE_DATABASE_ID = "ai-studio-android-rewardx-22e8648e-b919-48fd-8a38-2431f8a1d12b";
+    const BOOTSTRAPPED_ADMIN_EMAIL = "devadigareshma203@gmail.com";
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app, FIRESTORE_DATABASE_ID);
+    const provider = new GoogleAuthProvider();
+
+    const NAV_GROUPS = [
+      {
+        label: "Overview",
+        items: [
+          { id: "dashboard", label: "1. Dashboard" },
+          { id: "reports", label: "20. Reports & Analytics" },
+          { id: "auditLogs", label: "25. Audit Logs" }
+        ]
+      },
+      {
+        label: "Users & Economy",
+        items: [
+          { id: "users", label: "2. Users & Wallets" },
+          { id: "redemptions", label: "14. Redemption Requests" },
+          { id: "transactions", label: "15. Points Ledger" },
+          { id: "rewards", label: "13. Rewards Catalogue" },
+          { id: "promoCodes", label: "10. Promo Codes" },
+          { id: "referrals", label: "11. Refer & Earn" }
+        ]
+      },
+      {
+        label: "Activities & Games",
+        items: [
+          { id: "games", label: "3. Games Zone" },
+          { id: "videos", label: "4. Videos Zone" },
+          { id: "quiz", label: "5. Maths Quiz" },
+          { id: "scratch", label: "6. Scratch Card" },
+          { id: "spin", label: "7. Spinning Wheel" },
+          { id: "checkin", label: "8. Daily Check-in" },
+          { id: "rewardConfigs", label: "9. Reward Configuration" },
+          { id: "leaderboard", label: "12. Leaderboard" }
+        ]
+      },
+      {
+        label: "Engagement & Growth",
+        items: [
+          { id: "notifications", label: "16. Cloud Notifications" },
+          { id: "banners", label: "18. Banners" },
+          { id: "admob", label: "19. AdMob Settings" },
+          { id: "support", label: "21. Support / Feedback" }
+        ]
+      },
+      {
+        label: "System & Compliance",
+        items: [
+          { id: "appUpdate", label: "17. App Update" },
+          { id: "legal", label: "22. Legal Pages / URLs" },
+          { id: "appSettings", label: "23. App Settings" },
+          { id: "adminRoles", label: "24. Admin Roles" },
+          { id: "maintenance", label: "26. Maintenance Mode" }
+        ]
+      }
+    ];
+
+    const state = {
+      user: null,
+      adminRole: null,
+      activeSection: "dashboard",
+      publicConfig: {},
+      rewardConfigs: {},
+      toastTimer: null
+    };
+
+    const $ = (id) => document.getElementById(id);
+
+    function escapeHtml(str) {
+      return String(str ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function safeCsvCell(val) {
+      let s = String(val ?? "").replace(/\r?\n/g, " ");
+      if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+      return `"${s.replace(/"/g, '""')}"`;
+    }
+
+    function downloadCsv(filename, headers, rows) {
+      const lines = [
+        headers.map(safeCsvCell).join(","),
+        ...rows.map((r) => r.map(safeCsvCell).join(","))
+      ];
+      const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function isValidHttps(url) {
+      if (!url || typeof url !== "string") return false;
+      try {
+        const u = new URL(url.trim());
+        return u.protocol === "https:";
+      } catch {
+        return false;
+      }
+    }
+
+    function fmtTs(ts) {
+      if (!ts) return "—";
+      if (typeof ts.toDate === "function") return ts.toDate().toLocaleString();
+      if (ts.seconds) return new Date(ts.seconds * 1000).toLocaleString();
+      return String(ts);
+    }
+
+    function showToast(msg) {
+      const bar = $("toastBar");
+      bar.textContent = msg;
+      bar.classList.remove("hidden");
+      clearTimeout(state.toastTimer);
+      state.toastTimer = setTimeout(() => bar.classList.add("hidden"), 4500);
+    }
+
+    function setUpdatedNow() {
+      $("lastUpdatedLabel").textContent = "Last updated: " + new Date().toLocaleTimeString();
+    }
+
+    async function writeAuditLog(actionType, targetType, targetId, reason, beforeObj = null, afterObj = null) {
+      const cleanReason = String(reason || "").trim();
+      if (cleanReason.length < 2) throw new Error("Audit reason (min 2 chars) is required.");
+      const logId = "aud_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
+      await setDoc(doc(db, "adminAuditLogs", logId), {
+        actorUid: state.user.uid,
+        actorEmail: state.user.email || "",
+        actorRole: state.adminRole || "ADMIN",
+        actionType,
+        targetType,
+        targetId: String(targetId),
+        reason: cleanReason.slice(0, 500),
+        beforeSummary: beforeObj ? JSON.stringify(beforeObj).slice(0, 800) : "",
+        afterSummary: afterObj ? JSON.stringify(afterObj).slice(0, 800) : "",
+        createdAt: serverTimestamp()
+      });
+    }
+
+    async function loadSharedConfig() {
+      const pubSnap = await getDoc(doc(db, "publicConfig", "current"));
+      state.publicConfig = pubSnap.exists() ? pubSnap.data() : {
+        maintenanceMode: false,
+        maintenanceMessage: "",
+        latestVersionCode: 1,
+        latestVersionName: "1.0.0",
+        minimumSupportedVersionCode: 1,
+        updateUrl: "",
+        privacyUrl: "",
+        termsUrl: "",
+        rewardRulesUrl: "",
+        supportUrl: "",
+        apiBaseUrl: "",
+        adBannerEnabled: true,
+        adInterstitialEnabled: false,
+        adRewardedEnabled: true,
+        adAppOpenEnabled: false
+      };
+
+      const cfgSnap = await getDocs(collection(db, "rewardConfigs"));
+      state.rewardConfigs = {};
+      cfgSnap.forEach((d) => { state.rewardConfigs[d.id] = { id: d.id, ...d.data() }; });
+    }
+
+    async function callCloudFunction(endpointPath, bodyObj) {
+      const base = (state.publicConfig.apiBaseUrl || "").trim().replace(/\/+$/, "");
+      if (!isValidHttps(base)) {
+        throw new Error("Configure a valid HTTPS Cloud Functions apiBaseUrl in Section 23 (App Settings) first.");
+      }
+      const token = await state.user.getIdToken();
+      const resp = await fetch(`${base}/${endpointPath}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(bodyObj)
+      });
+      const json = await resp.json().catch(() => ({}));
+      if (!resp.ok) {
+        throw new Error(json.error || `Backend HTTP ${resp.status}`);
+      }
+      return json;
+    }
+
+    function renderNav() {
+      const container = $("navList");
+      container.innerHTML = "";
+      NAV_GROUPS.forEach((g) => {
+        const grp = document.createElement("div");
+        grp.className = "nav-group";
+        grp.textContent = g.label;
+        container.appendChild(grp);
+        g.items.forEach((item) => {
+          const btn = document.createElement("button");
+          btn.className = "nav-item" + (state.activeSection === item.id ? " active" : "");
+          btn.textContent = item.label;
+          btn.onclick = () => {
+            state.activeSection = item.id;
+            $("sidebar").classList.remove("open");
+            renderNav();
+            renderSection();
+          };
+          container.appendChild(btn);
+        });
+      });
+    }
+
+    async function verifyAdminAccess(user) {
+      const isBootstrapped = user.emailVerified && user.email === BOOTSTRAPPED_ADMIN_EMAIL;
+      let role = isBootstrapped ? "SUPER_ADMIN" : null;
+      try {
+        const admSnap = await getDoc(doc(db, "admins", user.uid));
+        if (admSnap.exists() && admSnap.data().active === true) {
+          role = admSnap.data().role || "MODERATOR";
+        }
+      } catch (e) {
+        if (!isBootstrapped) throw e;
+      }
+      if (!role) {
+        throw new Error(`Account ${user.email || user.uid} does not have an active admin role in admins/${user.uid}.`);
+      }
+      return role;
+    }
+
+    $("googleSignInBtn").onclick = async () => {
+      $("authError").classList.add("hidden");
+      try {
+        await signInWithPopup(auth, provider);
+      } catch (e) {
+        $("authError").textContent = e.message || "Google Sign-In failed.";
+        $("authError").classList.remove("hidden");
+      }
+    };
+
+    $("signOutBtn").onclick = () => signOut(auth);
+    $("refreshBtn").onclick = () => renderSection();
+    $("openSidebarBtn").onclick = () => $("sidebar").classList.add("open");
+    $("closeSidebarBtn").onclick = () => $("sidebar").classList.remove("open");
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        state.user = null;
+        state.adminRole = null;
+        $("adminShell").classList.add("hidden");
+        $("authGate").classList.remove("hidden");
+        return;
+      }
+      try {
+        const role = await verifyAdminAccess(user);
+        state.user = user;
+        state.adminRole = role;
+        $("adminRoleLabel").textContent = role;
+        $("adminEmailChip").textContent = user.email || user.uid;
+        $("authGate").classList.add("hidden");
+        $("adminShell").classList.remove("hidden");
+        await loadSharedConfig();
+        renderNav();
+        renderSection();
+      } catch (e) {
+        $("authError").textContent = e.message;
+        $("authError").classList.remove("hidden");
+        await signOut(auth);
+      }
+    });
+
+    async function renderSection() {
+      const root = $("mainContent");
+      const allItems = NAV_GROUPS.flatMap((g) => g.items);
+      const meta = allItems.find((i) => i.id === state.activeSection);
+      $("pageTitle").textContent = meta ? meta.label : "Dashboard";
+      root.innerHTML = `<div class="card"><p class="muted">Loading ${escapeHtml(meta?.label || "")}...</p></div>`;
+
+      try {
+        await loadSharedConfig();
+        const handlers = {
+          dashboard: renderDashboard,
+          users: renderUsers,
+          games: renderGames,
+          videos: renderVideos,
+          quiz: renderQuiz,
+          scratch: renderScratch,
+          spin: renderSpin,
+          checkin: renderCheckin,
+          rewardConfigs: renderRewardConfigs,
+          promoCodes: renderPromoCodes,
+          referrals: renderReferrals,
+          leaderboard: renderLeaderboard,
+          rewards: renderRewards,
+          redemptions: renderRedemptions,
+          transactions: renderTransactions,
+          notifications: renderNotifications,
+          appUpdate: renderAppUpdate,
+          banners: renderBanners,
+          admob: renderAdmob,
+          reports: renderReports,
+          support: renderSupport,
+          legal: renderLegal,
+          appSettings: renderAppSettings,
+          adminRoles: renderAdminRoles,
+          auditLogs: renderAuditLogs,
+          maintenance: renderMaintenance
+        };
+        const fn = handlers[state.activeSection] || renderDashboard;
+        await fn(root);
+        setUpdatedNow();
+      } catch (e) {
+        root.innerHTML = `<div class="alert err">Failed to load section: ${escapeHtml(e.message)}</div>`;
+      }
+    }
+
+    // 1. DASHBOARD
+    async function renderDashboard(root) {
+      const [
+        usersC, gamesC, videosC, rewardsC,
+        pendingRedeemC, openTicketsC, claimsC, auditsC, analyticsSnap
+      ] = await Promise.all([
+        getCountFromServer(collection(db, "users")),
+        getCountFromServer(query(collection(db, "games"), where("status", "==", "ACTIVE"))),
+        getCountFromServer(query(collection(db, "videos"), where("status", "==", "ACTIVE"))),
+        getCountFromServer(query(collection(db, "rewards"), where("status", "==", "ACTIVE"))),
+        getCountFromServer(query(collection(db, "redemptions"), where("status", "==", "PENDING"))),
+        getCountFromServer(query(collection(db, "supportTickets"), where("status", "==", "OPEN"))),
+        getCountFromServer(collection(db, "claimRequests")),
+        getCountFromServer(collection(db, "adminAuditLogs")),
+        getDocs(query(collection(db, "dailyAnalytics"), orderBy("__name__", "desc"), limit(14)))
+      ]);
+
+      const analytics = [];
+      analyticsSnap.forEach((d) => analytics.push({ id: d.id, ...d.data() }));
+      analytics.reverse();
+
+      const pub = state.publicConfig;
+      root.innerHTML = `
+        <div class="alert ${pub.maintenanceMode ? "warn" : "ok"}">
+          System Status: <strong>${pub.maintenanceMode ? "MAINTENANCE MODE ENABLED" : "LIVE & OPERATIONAL"}</strong> •
+          Latest App Build: <span class="mono">v${escapeHtml(pub.latestVersionName || "1.0.0")} (code ${pub.latestVersionCode || 1})</span> •
+          Functions API: ${isValidHttps(pub.apiBaseUrl) ? `<span class="mono">${escapeHtml(pub.apiBaseUrl)}</span>` : "<em>Not configured yet (set in Section 23)</em>"}
+        </div>
+        <div class="grid-kpi">
+          <div class="kpi"><div class="kpi-label">Registered Users</div><div class="kpi-val">${usersC.data().count}</div></div>
+          <div class="kpi"><div class="kpi-label">Active Games</div><div class="kpi-val">${gamesC.data().count}</div></div>
+          <div class="kpi"><div class="kpi-label">Active Videos</div><div class="kpi-val">${videosC.data().count}</div></div>
+          <div class="kpi"><div class="kpi-label">Active Rewards</div><div class="kpi-val">${rewardsC.data().count}</div></div>
+          <div class="kpi"><div class="kpi-label">Pending Redemptions</div><div class="kpi-val" style="color:var(--orange)">${pendingRedeemC.data().count}</div></div>
+          <div class="kpi"><div class="kpi-label">Open Support Tickets</div><div class="kpi-val" style="color:var(--warning)">${openTicketsC.data().count}</div></div>
+          <div class="kpi"><div class="kpi-label">Total Claim Requests</div><div class="kpi-val">${claimsC.data().count}</div></div>
+          <div class="kpi"><div class="kpi-label">Audit Log Events</div><div class="kpi-val">${auditsC.data().count}</div></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h3>Daily Activity Volume (Last 14 Analytics Snapshots)</h3>
+            <span class="muted">${analytics.length} day records in Firestore</span>
+          </div>
+          <canvas id="dashChart" width="900" height="240" style="width:100%;max-height:240px;background:var(--bg-secondary);border-radius:10px;"></canvas>
+        </div>
+      `;
+
+      const canvas = $("dashChart");
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (analytics.length === 0) {
+        ctx.fillStyle = "#A8B9CC";
+        ctx.font = "15px sans-serif";
+        ctx.fillText("No dailyAnalytics snapshots recorded yet. Scheduled Cloud Function populates this daily.", 28, 120);
+      } else {
+        const vals = analytics.map((a) => Number(a.verifiedTransactions || a.totalUsers || 0));
+        const maxVal = Math.max(10, ...vals);
+        const pad = 36;
+        const barW = Math.max(16, (canvas.width - pad * 2) / analytics.length - 10);
+        analytics.forEach((a, idx) => {
+          const val = vals[idx];
+          const h = ((canvas.height - pad * 2) * val) / maxVal;
+          const x = pad + idx * (barW + 10);
+          const y = canvas.height - pad - h;
+          ctx.fillStyle = "#168BFF";
+          ctx.fillRect(x, y, barW, h);
+          ctx.fillStyle = "#A8B9CC";
+          ctx.font = "11px sans-serif";
+          ctx.fillText(String(a.id).slice(5), x, canvas.height - 12);
+        });
+      }
+    }
+
+    // 2. USERS & WALLETS
+    async function renderUsers(root) {
+      const snap = await getDocs(query(collection(db, "users"), orderBy("createdAt", "desc"), limit(100)));
+      const users = [];
+      snap.forEach((d) => users.push({ id: d.id, ...d.data() }));
+
+      root.innerHTML = `
+        <div class="card">
+          <div class="card-header">
+            <h3>Users Directory (${users.length} loaded)</h3>
+            <input id="userSearch" placeholder="Search UID, name, email, referral..." style="max-width:300px;background:var(--bg-secondary);border:1px solid var(--divider);border-radius:10px;padding:8px 12px;" />
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>User</th><th>Public Alias</th><th>Status</th><th>Referral</th><th>Last Seen</th><th>Actions</th></tr></thead>
+              <tbody id="usersTbody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Manual Wallet Adjustment (Server-Authoritative Cloud Function)</h3>
+          <p class="muted" style="margin-bottom:12px;">Uses <span class="mono">/adminAdjustWallet</span> to atomically update wallet balance, write an immutable ledger row, and record an audit log.</p>
+          <div class="grid-2">
+            <div class="field"><label>Target UID</label><input id="adjUid" placeholder="Firebase Auth UID" /></div>
+            <div class="field"><label>Coin Delta (positive to credit, negative to debit)</label><input id="adjDelta" type="number" value="0" /></div>
+          </div>
+          <div class="field"><label>Mandatory Audit Reason</label><input id="adjReason" placeholder="e.g. Verified support reimbursement for ticket #..." /></div>
+          <button id="adjBtn" class="btn btn-orange">Apply Wallet Adjustment</button>
+        </div>
+      `;
+
+      const renderRows = (filterText = "") => {
+        const q = filterText.trim().toLowerCase();
+        const tbody = $("usersTbody");
+        tbody.innerHTML = "";
+        users
+          .filter((u) => !q || JSON.stringify(u).toLowerCase().includes(q))
+          .forEach((u) => {
+            const tr = document.createElement("tr");
+            const nextStatus = u.accountStatus === "SUSPENDED" ? "ACTIVE" : "SUSPENDED";
+            tr.innerHTML = `
+              <td><strong>${escapeHtml(u.displayName)}</strong><br/><span class="mono muted">${escapeHtml(u.uid)}</span><br/><span class="muted" style="font-size:0.78rem;">${escapeHtml(u.emailPrivate || "")}</span></td>
+              <td>${escapeHtml(u.publicDisplayName)}</td>
+              <td><span class="badge ${u.accountStatus === "ACTIVE" ? "ok" : "err"}">${escapeHtml(u.accountStatus)}</span></td>
+              <td class="mono">${escapeHtml(u.referralCode || "—")}</td>
+              <td>${escapeHtml(fmtTs(u.lastSeenAt))}</td>
+              <td>
+                <button class="btn btn-sm ${u.accountStatus === "SUSPENDED" ? "btn-success" : "btn-danger"} toggleStatusBtn" data-uid="${escapeHtml(u.uid)}" data-next="${nextStatus}">
+                  ${u.accountStatus === "SUSPENDED" ? "Reactivate" : "Suspend"}
+                </button>
+                <button class="btn btn-sm btn-ghost fillUidBtn" data-uid="${escapeHtml(u.uid)}">Adjust Wallet</button>
+              </td>
+            `;
+            tbody.appendChild(tr);
+          });
+
+        tbody.querySelectorAll(".fillUidBtn").forEach((b) => {
+          b.onclick = () => { $("adjUid").value = b.dataset.uid; $("adjUid").focus(); };
+        });
+        tbody.querySelectorAll(".toggleStatusBtn").forEach((b) => {
+          b.onclick = async () => {
+            const reason = prompt(`Mandatory reason to change user ${b.dataset.uid} to ${b.dataset.next}:`);
+            if (!reason || reason.trim().length < 2) return showToast("Cancelled: reason is required.");
+            await updateDoc(doc(db, "users", b.dataset.uid), {
+              accountStatus: b.dataset.next,
+              updatedAt: serverTimestamp()
+            });
+            await writeAuditLog("USER_STATUS_CHANGE", "users", b.dataset.uid, reason, null, { accountStatus: b.dataset.next });
+            showToast(`User ${b.dataset.uid} updated to ${b.dataset.next}`);
+            renderSection();
+          };
+        });
+      };
+
+      renderRows();
+      $("userSearch").oninput = (e) => renderRows(e.target.value);
+      $("adjBtn").onclick = async () => {
+        const uid = $("adjUid").value.trim();
+        const delta = parseInt($("adjDelta").value, 10);
+        const reason = $("adjReason").value.trim();
+        if (!uid || !delta || reason.length < 2) return showToast("Provide UID, non-zero coin delta, and reason.");
+        if (!confirm(`Adjust wallet of ${uid} by ${delta} coins?`)) return;
+        try {
+          const res = await callCloudFunction("adminAdjustWallet", { targetUid: uid, delta, reason });
+          showToast(res.message || "Wallet adjusted.");
+          $("adjReason").value = "";
+        } catch (e) {
+          showToast("Error: " + e.message);
+        }
+      };
+    }
+
+    // 3. GAMES ZONE (All 19 fields)
+    async function renderGames(root) {
+      const snap = await getDocs(query(collection(db, "games"), orderBy("sortOrder", "asc")));
+      const games = [];
+      snap.forEach((d) => games.push({ id: d.id, ...d.data() }));
+
+      root.innerHTML = `
+        <div class="card">
+          <h3 id="gameFormTitle">Add / Edit Game</h3>
+          <form id="gameForm" class="grid-2" style="margin-top:12px;">
+            <div class="field"><label>Game ID (slug)</label><input id="gId" required placeholder="galaxy_sprint" /></div>
+            <div class="field"><label>Game Name</label><input id="gName" required placeholder="Galaxy Sprint" /></div>
+            <div class="field"><label>Logo URL (HTTPS)</label><input id="gLogo" required type="url" placeholder="https://..." /></div>
+            <div class="field"><label>Playable HTTPS Game URL</label><input id="gUrl" required type="url" placeholder="https://..." /></div>
+            <div class="field"><label>Gameplay Screenshot URLs (comma-separated HTTPS)</label><input id="gShots" placeholder="https://..., https://..." /></div>
+            <div class="field"><label>Category</label><input id="gCategory" required value="Arcade" /></div>
+            <div class="field"><label>Tags (comma-separated)</label><input id="gTags" value="action, fast" /></div>
+            <div class="field"><label>Play Duration (seconds, 5–3600)</label><input id="gDuration" type="number" min="5" max="3600" value="60" /></div>
+            <div class="field"><label>Reward Coins (0–10000)</label><input id="gReward" type="number" min="0" max="10000" value="15" /></div>
+            <div class="field"><label>Daily Play Limit (0–100)</label><input id="gLimit" type="number" min="0" max="100" value="5" /></div>
+            <div class="field"><label>Sort Order</label><input id="gSort" type="number" value="10" /></div>
+            <div class="field"><label>Orientation</label><select id="gOrient"><option value="PORTRAIT">PORTRAIT</option><option value="LANDSCAPE">LANDSCAPE</option><option value="AUTO">AUTO</option></select></div>
+            <div class="field"><label>Status</label><select id="gStatus"><option value="ACTIVE">ACTIVE</option><option value="INACTIVE">INACTIVE</option><option value="COMING_SOON">COMING_SOON</option><option value="ARCHIVED">ARCHIVED</option></select></div>
+            <div class="field"><label>Options</label>
+              <div class="checkbox-row"><input id="gFeatured" type="checkbox" /><span>Featured on Home</span></div>
+              <div class="checkbox-row"><input id="gSound" type="checkbox" checked /><span>Sound Enabled by Default</span></div>
+            </div>
+            <div class="field" style="grid-column:1/-1;"><label>Description</label><textarea id="gDesc" required>Tap to dodge obstacles and reach the target play time.</textarea></div>
+            <div class="field" style="grid-column:1/-1;"><label>Instructions</label><textarea id="gInstr">Play actively until the timer finishes to submit a verified completion.</textarea></div>
+            <div class="field" style="grid-column:1/-1;"><label>Audit Reason</label><input id="gReason" required value="Catalogue update" /></div>
+            <div style="grid-column:1/-1;display:flex;gap:10px;">
+              <button class="btn btn-primary" type="submit">Save Game</button>
+              <button class="btn btn-ghost" type="button" id="gResetBtn">Reset</button>
+            </div>
+          </form>
+        </div>
+        <div class="card">
+          <h3>Configured Games (${games.length})</h3>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Icon</th><th>Game</th><th>Category</th><th>Reward</th><th>Timer / Limit</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="gamesTbody"></tbody>
+            </table>
+          </div>
+        </div>
+      `;
+
+      const tbody = $("gamesTbody");
+      games.forEach((g) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><img class="thumb" src="${escapeHtml(g.logoUrl)}" alt="" onerror="this.src='./favicon.svg'"/></td>
+          <td><strong>${escapeHtml(g.name)}</strong><br/><span class="mono muted">${escapeHtml(g.id)}</span></td>
+          <td>${escapeHtml(g.category)} ${g.featured ? '<span class="badge">FEATURED</span>' : ""}</td>
+          <td>${g.rewardPoints} coins</td>
+          <td>${g.playDurationSeconds}s • ${g.dailyPlayLimit}/day</td>
+          <td><span class="badge ${g.status === "ACTIVE" ? "ok" : "warn"}">${escapeHtml(g.status)}</span></td>
+          <td><button class="btn btn-sm btn-ghost editGameBtn">Edit</button></td>
+        `;
+        tr.querySelector(".editGameBtn").onclick = () => {
+          $("gId").value = g.id;
+          $("gName").value = g.name || "";
+          $("gLogo").value = g.logoUrl || "";
+          $("gUrl").value = g.gameUrl || "";
+          $("gShots").value = (g.gameplayImageUrls || []).join(", ");
+          $("gCategory").value = g.category || "";
+          $("gTags").value = (g.tags || []).join(", ");
+          $("gDuration").value = g.playDurationSeconds || 60;
+          $("gReward").value = g.rewardPoints || 0;
+          $("gLimit").value = g.dailyPlayLimit || 5;
+          $("gSort").value = g.sortOrder || 0;
+          $("gOrient").value = g.orientation || "PORTRAIT";
+          $("gStatus").value = g.status || "ACTIVE";
+          $("gFeatured").checked = Boolean(g.featured);
+          $("gSound").checked = g.soundDefault !== false;
+          $("gDesc").value = g.description || "";
+          $("gInstr").value = g.instructions || "";
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        };
+        tbody.appendChild(tr);
+      });
+
+      $("gResetBtn").onclick = () => $("gameForm").reset();
+      $("gameForm").onsubmit = async (e) => {
+        e.preventDefault();
+        const id = $("gId").value.trim().replace(/[^a-zA-Z0-9_-]/g, "_");
+        const logoUrl = $("gLogo").value.trim();
+        const gameUrl = $("gUrl").value.trim();
+        if (!isValidHttps(logoUrl) || !isValidHttps(gameUrl)) {
+          return showToast("Logo URL and Game URL must both be valid HTTPS URLs.");
+        }
+        const shots = $("gShots").value.split(",").map((s) => s.trim()).filter(isValidHttps);
+        const tags = $("gTags").value.split(",").map((s) => s.trim()).filter(Boolean);
+        const payload = {
+          name: $("gName").value.trim(),
+          logoUrl,
+          gameplayImageUrls: shots,
+          gameUrl,
+          description: $("gDesc").value.trim(),
+          instructions: $("gInstr").value.trim(),
+          playDurationSeconds: parseInt($("gDuration").value, 10),
+          rewardPoints: parseInt($("gReward").value, 10),
+          dailyPlayLimit: parseInt($("gLimit").value, 10),
+          category: $("gCategory").value.trim(),
+          tags,
+          featured: $("gFeatured").checked,
+          sortOrder: parseInt($("gSort").value, 10),
+          orientation: $("gOrient").value,
+          soundDefault: $("gSound").checked,
+          status: $("gStatus").value,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        };
+        await setDoc(doc(db, "games", id), payload, { merge: true });
+        await writeAuditLog("UPSERT_GAME", "games", id, $("gReason").value, null, { name: payload.name, status: payload.status });
+        showToast(`Saved game ${payload.name}`);
+        renderSection();
+      };
+    }
+
+    // 4. VIDEOS ZONE
+    async function renderVideos(root) {
+      const snap = await getDocs(query(collection(db, "videos"), orderBy("sortOrder", "asc")));
+      const items = [];
+      snap.forEach((d) => items.push({ id: d.id, ...d.data() }));
+
+      root.innerHTML = `
+        <div class="card">
+          <h3>Add / Edit Video</h3>
+          <form id="videoForm" class="grid-2" style="margin-top:12px;">
+            <div class="field"><label>Video ID</label><input id="vId" required placeholder="intro_rewardx" /></div>
+            <div class="field"><label>Title</label><input id="vTitle" required /></div>
+            <div class="field"><label>Thumbnail HTTPS URL</label><input id="vThumb" required type="url" /></div>
+            <div class="field"><label>Video Stream HTTPS URL (MP4/HLS)</label><input id="vUrl" required type="url" /></div>
+            <div class="field"><label>Duration (seconds, 5–7200)</label><input id="vDur" type="number" min="5" max="7200" value="30" /></div>
+            <div class="field"><label>Completion Threshold (50–100%)</label><input id="vThresh" type="number" min="50" max="100" value="85" /></div>
+            <div class="field"><label>Reward Coins</label><input id="vReward" type="number" min="0" max="10000" value="8" /></div>
+            <div class="field"><label>Daily Limit</label><input id="vLimit" type="number" min="0" max="100" value="5" /></div>
+            <div class="field"><label>Sort Order</label><input id="vSort" type="number" value="1" /></div>
+            <div class="field"><label>Status</label><select id="vStatus"><option value="ACTIVE">ACTIVE</option><option value="INACTIVE">INACTIVE</option><option value="ARCHIVED">ARCHIVED</option></select></div>
+            <div class="field" style="grid-column:1/-1;"><label>Description</label><textarea id="vDesc" required>Watch until the verified completion threshold is reached.</textarea></div>
+            <div class="field" style="grid-column:1/-1;"><label>Audit Reason</label><input id="vReason" required value="Video catalogue update" /></div>
+            <div style="grid-column:1/-1;"><button class="btn btn-primary" type="submit">Save Video</button></div>
+          </form>
+        </div>
+        <div class="card">
+          <h3>Videos (${items.length})</h3>
+          <div class="table-wrap"><table><thead><tr><th>Thumb</th><th>Title</th><th>Duration / Threshold</th><th>Reward / Limit</th><th>Status</th><th>Edit</th></tr></thead><tbody id="videosTbody"></tbody></table></div>
+        </div>
+      `;
+
+      const tbody = $("videosTbody");
+      items.forEach((v) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><img class="thumb" src="${escapeHtml(v.thumbnailUrl)}" alt="" onerror="this.src='./favicon.svg'"/></td>
+          <td><strong>${escapeHtml(v.title)}</strong><br/><span class="mono muted">${escapeHtml(v.id)}</span></td>
+          <td>${v.durationSeconds}s • ${v.completionThreshold}%</td>
+          <td>${v.rewardPoints} coins • ${v.dailyLimit}/day</td>
+          <td><span class="badge ${v.status === "ACTIVE" ? "ok" : "warn"}">${escapeHtml(v.status)}</span></td>
+          <td><button class="btn btn-sm btn-ghost editVid">Edit</button></td>
+        `;
+        tr.querySelector(".editVid").onclick = () => {
+          $("vId").value = v.id; $("vTitle").value = v.title || "";
+          $("vThumb").value = v.thumbnailUrl || ""; $("vUrl").value = v.videoUrl || "";
+          $("vDur").value = v.durationSeconds || 30; $("vThresh").value = v.completionThreshold || 85;
+          $("vReward").value = v.rewardPoints || 5; $("vLimit").value = v.dailyLimit || 5;
+          $("vSort").value = v.sortOrder || 1; $("vStatus").value = v.status || "ACTIVE";
+          $("vDesc").value = v.description || "";
+        };
+        tbody.appendChild(tr);
+      });
+
+      $("videoForm").onsubmit = async (e) => {
+        e.preventDefault();
+        const id = $("vId").value.trim().replace(/[^a-zA-Z0-9_-]/g, "_");
+        if (!isValidHttps($("vThumb").value) || !isValidHttps($("vUrl").value)) return showToast("HTTPS URLs required.");
+        await setDoc(doc(db, "videos", id), {
+          title: $("vTitle").value.trim(),
+          thumbnailUrl: $("vThumb").value.trim(),
+          videoUrl: $("vUrl").value.trim(),
+          description: $("vDesc").value.trim(),
+          durationSeconds: parseInt($("vDur").value, 10),
+          completionThreshold: parseInt($("vThresh").value, 10),
+          rewardPoints: parseInt($("vReward").value, 10),
+          dailyLimit: parseInt($("vLimit").value, 10),
+          sortOrder: parseInt($("vSort").value, 10),
+          status: $("vStatus").value,
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+        await writeAuditLog("UPSERT_VIDEO", "videos", id, $("vReason").value);
+        showToast("Video saved.");
+        renderSection();
+      };
+    }
+
+    // 5. MATHS QUIZ (Writes question publicly & answer key privately!)
+    async function renderQuiz(root) {
+      const [qSnap, kSnap] = await Promise.all([
+        getDocs(collection(db, "quizQuestions")),
+        getDocs(collection(db, "quizAnswerKeys"))
+      ]);
+      const keysMap = {};
+      kSnap.forEach((d) => { keysMap[d.id] = d.data().correctIndex; });
+      const items = [];
+      qSnap.forEach((d) => items.push({ id: d.id, ...d.data(), correctIndex: keysMap[d.id] ?? 0 }));
+      const cfg = state.rewardConfigs.MATHS_QUIZ || { enabled: true, pointsPerCorrect: 5, dailyLimit: 5, timerSeconds: 60, questionsPerQuiz: 5, version: 1 };
+
+      root.innerHTML = `
+        <div class="card">
+          <h3>Maths Quiz Global Rules</h3>
+          <form id="quizCfgForm" class="grid-2" style="margin-top:10px;">
+            <div class="field"><label>Coins per Correct Answer</label><input id="qcCoins" type="number" min="0" max="50" value="${cfg.pointsPerCorrect ?? 5}" /></div>
+            <div class="field"><label>Daily Attempt Limit</label><input id="qcLimit" type="number" min="0" max="100" value="${cfg.dailyLimit ?? 5}" /></div>
+            <div class="field"><label>Quiz Time Limit (seconds)</label><input id="qcTime" type="number" min="15" max="600" value="${cfg.timerSeconds ?? 60}" /></div>
+            <div class="field"><label>Questions per Quiz</label><input id="qcCount" type="number" min="1" max="30" value="${cfg.questionsPerQuiz ?? 5}" /></div>
+            <div class="checkbox-row"><input id="qcEn" type="checkbox" ${cfg.enabled !== false ? "checked" : ""}/><span>Maths Quiz Enabled</span></div>
+            <div><button class="btn btn-primary" type="submit">Save Quiz Rules</button></div>
+          </form>
+        </div>
+        <div class="card">
+          <h3>Add / Edit Question (Answer Key stored privately in <span class="mono">quizAnswerKeys</span>)</h3>
+          <form id="quizForm" class="grid-2" style="margin-top:10px;">
+            <div class="field"><label>Question ID</label><input id="qqId" required placeholder="q_math_01" /></div>
+            <div class="field"><label>Category</label><input id="qqCat" value="Arithmetic" /></div>
+            <div class="field" style="grid-column:1/-1;"><label>Question Text</label><input id="qqText" required placeholder="What is 14 × 6?" /></div>
+            <div class="field" style="grid-column:1/-1;"><label>Options (comma-separated, 2–6 choices)</label><input id="qqOpts" required placeholder="74, 84, 86, 92" /></div>
+            <div class="field"><label>Correct Option Index (0-based)</label><input id="qqIdx" type="number" min="0" max="5" value="1" /></div>
+            <div class="field"><label>Difficulty</label><select id="qqDiff"><option>EASY</option><option>MEDIUM</option><option>HARD</option></select></div>
+            <div class="field"><label>Status</label><select id="qqStat"><option>ACTIVE</option><option>INACTIVE</option><option>ARCHIVED</option></select></div>
+            <div class="field"><label>Audit Reason</label><input id="qqReason" required value="Quiz question update" /></div>
+            <div style="grid-column:1/-1;"><button class="btn btn-primary" type="submit">Save Question & Private Answer Key</button></div>
+          </form>
+        </div>
+        <div class="card">
+          <h3>Question Bank (${items.length})</h3>
+          <div class="table-wrap"><table><thead><tr><th>Question</th><th>Options</th><th>Correct Index (Admin Only)</th><th>Difficulty</th><th>Status</th><th>Edit</th></tr></thead><tbody id="quizTbody"></tbody></table></div>
+        </div>
+      `;
+
+      $("quizCfgForm").onsubmit = async (e) => {
+        e.preventDefault();
+        await setDoc(doc(db, "rewardConfigs", "MATHS_QUIZ"), {
+          activityType: "MATHS_QUIZ",
+          enabled: $("qcEn").checked,
+          pointsPerCorrect: parseInt($("qcCoins").value, 10),
+          dailyLimit: parseInt($("qcLimit").value, 10),
+          timerSeconds: parseInt($("qcTime").value, 10),
+          questionsPerQuiz: parseInt($("qcCount").value, 10),
+          version: Number(cfg.version || 0) + 1,
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+        await writeAuditLog("UPDATE_QUIZ_CONFIG", "rewardConfigs", "MATHS_QUIZ", "Updated quiz rules");
+        showToast("Quiz rules saved.");
+      };
+
+      const tbody = $("quizTbody");
+      items.forEach((q) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><strong>${escapeHtml(q.question)}</strong><br/><span class="mono muted">${escapeHtml(q.id)}</span></td>
+          <td>${(q.options || []).map((o, i) => `[${i}] ${escapeHtml(o)}`).join(" • ")}</td>
+          <td><span class="badge">${q.correctIndex}</span></td>
+          <td>${escapeHtml(q.difficulty)}</td>
+          <td><span class="badge ${q.status === "ACTIVE" ? "ok" : "warn"}">${escapeHtml(q.status)}</span></td>
+          <td><button class="btn btn-sm btn-ghost editQ">Edit</button></td>
+        `;
+        tr.querySelector(".editQ").onclick = () => {
+          $("qqId").value = q.id; $("qqCat").value = q.category || "Arithmetic";
+          $("qqText").value = q.question || ""; $("qqOpts").value = (q.options || []).join(", ");
+          $("qqIdx").value = q.correctIndex ?? 0; $("qqDiff").value = q.difficulty || "EASY";
+          $("qqStat").value = q.status || "ACTIVE";
+        };
+        tbody.appendChild(tr);
+      });
+
+      $("quizForm").onsubmit = async (e) => {
+        e.preventDefault();
+        const id = $("qqId").value.trim().replace(/[^a-zA-Z0-9_-]/g, "_");
+        const opts = $("qqOpts").value.split(",").map((s) => s.trim()).filter(Boolean);
+        const idx = parseInt($("qqIdx").value, 10);
+        if (opts.length < 2 || opts.length > 6 || idx < 0 || idx >= opts.length) {
+          return showToast("Provide 2–6 options and a valid 0-based correct index.");
+        }
+        await setDoc(doc(db, "quizQuestions", id), {
+          question: $("qqText").value.trim(),
+          options: opts,
+          category: $("qqCat").value.trim(),
+          difficulty: $("qqDiff").value,
+          status: $("qqStat").value,
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+        await setDoc(doc(db, "quizAnswerKeys", id), {
+          correctIndex: idx,
+          updatedAt: serverTimestamp()
+        });
+        await writeAuditLog("UPSERT_QUIZ_QUESTION", "quizQuestions", id, $("qqReason").value);
+        showToast("Saved question and private answer key.");
+        renderSection();
+      };
+    }
+
+    // 6. SCRATCH CARD (Strict 1-10 coin rule)
+    async function renderBoundedActivity(root, activityKey, title, extraFieldHtml = "", extraPayloadFn = () => ({})) {
+      const cfg = state.rewardConfigs[activityKey] || {
+        activityType: activityKey, enabled: true, minCoins: 1, maxCoins: 10,
+        dailyLimit: 3, cooldownSeconds: 60, probabilityDisclosure: "", rulesText: "", version: 1
+      };
+      root.innerHTML = `
+        <div class="card">
+          <h3>${escapeHtml(title)} (Mandatory 1–10 Coin Server Range)</h3>
+          <div class="alert">Product Rule & Security Rule Enforced: Minimum and maximum rewards must both remain strictly between <strong>1 and 10 coins inclusive</strong>.</div>
+          <form id="boundedForm" class="grid-2">
+            <div class="field"><label>Minimum Coins (1–10)</label><input id="bMin" type="number" min="1" max="10" value="${cfg.minCoins ?? 1}" required /></div>
+            <div class="field"><label>Maximum Coins (1–10)</label><input id="bMax" type="number" min="1" max="10" value="${cfg.maxCoins ?? 10}" required /></div>
+            <div class="field"><label>Daily Limit (0–500)</label><input id="bLimit" type="number" min="0" max="500" value="${cfg.dailyLimit ?? 3}" required /></div>
+            <div class="field"><label>Cooldown Seconds</label><input id="bCool" type="number" min="0" max="604800" value="${cfg.cooldownSeconds ?? 60}" required /></div>
+            ${extraFieldHtml}
+            <div class="field" style="grid-column:1/-1;"><label>Probability Disclosure</label><input id="bProb" value="${escapeHtml(cfg.probabilityDisclosure || "Uniform/weighted 1–10 coin outcomes configured server-side.")}" /></div>
+            <div class="field" style="grid-column:1/-1;"><label>Published Rules Text</label><textarea id="bRules">${escapeHtml(cfg.rulesText || "")}</textarea></div>
+            <div class="field"><label>Mandatory Audit Reason</label><input id="bReason" required value="Updated ${activityKey} parameters" /></div>
+            <div class="checkbox-row"><input id="bEn" type="checkbox" ${cfg.enabled !== false ? "checked" : ""}/><span>Feature Enabled</span></div>
+            <div style="grid-column:1/-1;"><button class="btn btn-primary" type="submit">Validate & Save ${escapeHtml(title)}</button></div>
+          </form>
+        </div>
+      `;
+      $("boundedForm").onsubmit = async (e) => {
+        e.preventDefault();
+        const minC = parseInt($("bMin").value, 10);
+        const maxC = parseInt($("bMax").value, 10);
+        if (minC < 1 || maxC > 10 || minC > maxC) {
+          return showToast("Validation failed: minCoins and maxCoins MUST be between 1 and 10 with min <= max.");
+        }
+        const payload = {
+          activityType: activityKey,
+          enabled: $("bEn").checked,
+          minCoins: minC,
+          maxCoins: maxC,
+          dailyLimit: parseInt($("bLimit").value, 10),
+          cooldownSeconds: parseInt($("bCool").value, 10),
+          probabilityDisclosure: $("bProb").value.trim(),
+          rulesText: $("bRules").value.trim(),
+          ...extraPayloadFn(),
+          version: Number(cfg.version || 0) + 1,
+          updatedAt: serverTimestamp()
+        };
+        await setDoc(doc(db, "rewardConfigs", activityKey), payload, { merge: true });
+        await writeAuditLog("UPDATE_REWARD_CONFIG", "rewardConfigs", activityKey, $("bReason").value, cfg, payload);
+        showToast(`${title} configuration saved (v${payload.version}).`);
+        renderSection();
+      };
+    }
+
+    async function renderScratch(root) {
+      await renderBoundedActivity(root, "SCRATCH_CARD", "Scratch Card Configuration");
+    }
+
+    // 7. SPINNING WHEEL
+    async function renderSpin(root) {
+      const cfg = state.rewardConfigs.SPIN_WHEEL || {};
+      const weights = Array.isArray(cfg.segmentWeights) ? cfg.segmentWeights.join(", ") : "20, 18, 16, 14, 12, 10, 6, 4";
+      await renderBoundedActivity(
+        root,
+        "SPIN_WHEEL",
+        "Spinning Wheel Configuration",
+        `<div class="field" style="grid-column:1/-1;"><label>Segment Weights (comma-separated integers)</label><input id="bWeights" value="${escapeHtml(weights)}" /></div>`,
+        () => ({
+          segmentWeights: $("bWeights").value.split(",").map((x) => parseInt(x.trim(), 10)).filter((n) => n > 0)
+        })
+      );
+    }
+
+    // 8. DAILY CHECK-IN
+    async function renderCheckin(root) {
+      const cfg = state.rewardConfigs.DAILY_CHECKIN || { enabled: true, cycleSchedule: [10, 15, 20, 25, 30, 40, 60], rulesText: "", version: 1 };
+      const days = Array.isArray(cfg.cycleSchedule) && cfg.cycleSchedule.length ? cfg.cycleSchedule.join(", ") : "10, 15, 20, 25, 30, 40, 60";
+      root.innerHTML = `
+        <div class="card">
+          <h3>Daily Check-in 7-Day Cycle</h3>
+          <form id="ciForm" class="grid-2" style="margin-top:12px;">
+            <div class="field" style="grid-column:1/-1;"><label>Day 1–7 Coin Rewards (comma-separated, 7 values)</label><input id="ciDays" value="${escapeHtml(days)}" required /></div>
+            <div class="field" style="grid-column:1/-1;"><label>Cycle Rules</label><textarea id="ciRules">${escapeHtml(cfg.rulesText || "Claim once every UTC day. Missing a day resets the streak to Day 1.")}</textarea></div>
+            <div class="field"><label>Audit Reason</label><input id="ciReason" required value="Updated Daily Check-in rewards" /></div>
+            <div class="checkbox-row"><input id="ciEn" type="checkbox" ${cfg.enabled !== false ? "checked" : ""}/><span>Check-in Enabled</span></div>
+            <div style="grid-column:1/-1;"><button class="btn btn-primary" type="submit">Save Check-in Config</button></div>
+          </form>
+        </div>
+      `;
+      $("ciForm").onsubmit = async (e) => {
+        e.preventDefault();
+        const arr = $("ciDays").value.split(",").map((n) => parseInt(n.trim(), 10)).filter((n) => !Number.isNaN(n) && n >= 0 && n <= 1000);
+        if (arr.length !== 7) return showToast("Provide exactly 7 integer rewards for Days 1–7.");
+        const nextVer = Number(cfg.version || 0) + 1;
+        await setDoc(doc(db, "rewardConfigs", "DAILY_CHECKIN"), {
+          activityType: "DAILY_CHECKIN",
+          enabled: $("ciEn").checked,
+          cycleSchedule: arr,
+          rulesText: $("ciRules").value.trim(),
+          version: nextVer,
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+        await writeAuditLog("UPDATE_CHECKIN", "rewardConfigs", "DAILY_CHECKIN", $("ciReason").value, cfg, { cycleSchedule: arr });
+        showToast("Daily Check-in updated.");
+      };
+    }
+
+    // 9. MASTER REWARD CONFIGURATION MATRIX
+    async function renderRewardConfigs(root) {
+      const keys = Object.keys(state.rewardConfigs).sort();
+      root.innerHTML = `
+        <div class="card">
+          <h3>All Active Reward Configurations (${keys.length})</h3>
+          <div class="table-wrap"><table><thead><tr><th>Activity Key</th><th>Enabled</th><th>Min/Max Coins</th><th>Daily Limit</th><th>Version</th><th>Updated</th></tr></thead><tbody>
+            ${keys.map((k) => {
+              const c = state.rewardConfigs[k];
+              return `<tr><td class="mono">${escapeHtml(k)}</td><td><span class="badge ${c.enabled ? "ok" : "err"}">${c.enabled ? "ON" : "OFF"}</span></td><td>${c.minCoins ?? "—"} – ${c.maxCoins ?? "—"}</td><td>${c.dailyLimit ?? "—"}</td><td>v${c.version || 1}</td><td>${escapeHtml(fmtTs(c.updatedAt))}</td></tr>`;
+            }).join("")}
+          </tbody></table></div>
+        </div>
+      `;
+    }
+
+    // 10. PROMO CODES
+    async function renderPromoCodes(root) {
+      const snap = await getDocs(collection(db, "promoCodes"));
+      const items = [];
+      snap.forEach((d) => items.push({ id: d.id, ...d.data() }));
+      root.innerHTML = `
+        <div class="card">
+          <h3>Create / Edit Promo Code</h3>
+          <form id="promoForm" class="grid-2" style="margin-top:10px;">
+            <div class="field"><label>Promo Code (UPPERCASE)</label><input id="pCode" required placeholder="WELCOME25" /></div>
+            <div class="field"><label>Reward Coins</label><input id="pCoins" type="number" min="1" max="5000" value="25" /></div>
+            <div class="field"><label>Max Total Claims</label><input id="pMax" type="number" min="1" max="1000000" value="500" /></div>
+            <div class="field"><label>Status</label><select id="pStatus"><option>ACTIVE</option><option>PAUSED</option><option>EXPIRED</option></select></div>
+            <div class="field"><label>Expiry Date (optional)</label><input id="pExp" type="date" /></div>
+            <div class="field"><label>Audit Reason</label><input id="pReason" required value="Promo campaign update" /></div>
+            <div style="grid-column:1/-1;"><button class="btn btn-primary" type="submit">Save Promo Code</button></div>
+          </form>
+        </div>
+        <div class="card">
+          <h3>Promo Codes (${items.length})</h3>
+          <div class="table-wrap"><table><thead><tr><th>Code</th><th>Reward</th><th>Used / Max</th><th>Status</th><th>Expires</th></tr></thead><tbody>
+            ${items.map((p) => `<tr><td class="mono"><strong>${escapeHtml(p.id)}</strong></td><td>${p.points || 0} coins</td><td>${p.redeemedCount || 0} / ${p.totalLimit || 0}</td><td><span class="badge ${p.status === "ACTIVE" ? "ok" : "warn"}">${escapeHtml(p.status)}</span></td><td>${escapeHtml(fmtTs(p.expiresAt))}</td></tr>`).join("")}
+          </tbody></table></div>
+        </div>
+      `;
+      $("promoForm").onsubmit = async (e) => {
+        e.preventDefault();
+        const code = $("pCode").value.trim().toUpperCase().replace(/[^A-Z0-9_-]/g, "");
+        if (code.length < 3) return showToast("Code must be at least 3 alphanumeric characters.");
+        const expVal = $("pExp").value;
+        await setDoc(doc(db, "promoCodes", code), {
+          code,
+          points: parseInt($("pCoins").value, 10),
+          totalLimit: parseInt($("pMax").value, 10),
+          redeemedCount: 0,
+          status: $("pStatus").value,
+          ...(expVal ? { expiresAt: Timestamp.fromDate(new Date(expVal + "T23:59:59Z")) } : {}),
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+        await writeAuditLog("UPSERT_PROMO", "promoCodes", code, $("pReason").value);
+        showToast(`Promo code ${code} saved.`);
+        renderSection();
+      };
+    }
+
+    // 11. REFER & EARN
+    async function renderReferrals(root) {
+      const cfg = state.rewardConfigs.REFERRAL || { enabled: true, inviterReward: 100, inviteeReward: 25, dailyLimit: 10, version: 1 };
+      const snap = await getDocs(query(collection(db, "referrals"), limit(50)));
+      const rows = [];
+      snap.forEach((d) => rows.push({ id: d.id, ...d.data() }));
+      root.innerHTML = `
+        <div class="card">
+          <h3>Refer & Earn Rules</h3>
+          <form id="refForm" class="grid-2" style="margin-top:10px;">
+            <div class="field"><label>Inviter Reward (coins)</label><input id="rInv" type="number" min="0" max="5000" value="${cfg.inviterReward ?? 100}" /></div>
+            <div class="field"><label>Referred User Reward (coins)</label><input id="rRef" type="number" min="0" max="5000" value="${cfg.inviteeReward ?? 25}" /></div>
+            <div class="field"><label>Daily Referral Cap</label><input id="rCap" type="number" min="0" max="100" value="${cfg.dailyLimit ?? 10}" /></div>
+            <div class="checkbox-row"><input id="rEn" type="checkbox" ${cfg.enabled !== false ? "checked" : ""}/><span>Referral Program Enabled</span></div>
+            <div style="grid-column:1/-1;"><button class="btn btn-primary" type="submit">Save Referral Rules</button></div>
+          </form>
+        </div>
+        <div class="card">
+          <h3>Recent Referrals (${rows.length})</h3>
+          <div class="table-wrap"><table><thead><tr><th>ID</th><th>Inviter UID</th><th>Referred UID</th><th>Status</th><th>Created</th></tr></thead><tbody>
+            ${rows.map((r) => `<tr><td class="mono">${escapeHtml(r.id)}</td><td class="mono">${escapeHtml(r.inviterUid)}</td><td class="mono">${escapeHtml(r.referredUid)}</td><td><span class="badge">${escapeHtml(r.status)}</span></td><td>${escapeHtml(fmtTs(r.createdAt))}</td></tr>`).join("")}
+          </tbody></table></div>
+        </div>
+      `;
+      $("refForm").onsubmit = async (e) => {
+        e.preventDefault();
+        await setDoc(doc(db, "rewardConfigs", "REFERRAL"), {
+          activityType: "REFERRAL",
+          enabled: $("rEn").checked,
+          inviterReward: parseInt($("rInv").value, 10),
+          inviteeReward: parseInt($("rRef").value, 10),
+          dailyLimit: parseInt($("rCap").value, 10),
+          version: Number(cfg.version || 0) + 1,
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+        await writeAuditLog("UPDATE_REFERRAL_CONFIG", "rewardConfigs", "REFERRAL", "Updated referral rules");
+        showToast("Referral rules saved.");
+      };
+    }
+
+    // 12. LEADERBOARD
+    async function renderLeaderboard(root) {
+      const snap = await getDocs(query(collection(db, "leaderboardEntries"), orderBy("rank", "asc"), limit(100)));
+      const rows = [];
+      snap.forEach((d) => rows.push({ id: d.id, ...d.data() }));
+      root.innerHTML = `
+        <div class="card">
+          <h3>Published Leaderboard Entries (${rows.length})</h3>
+          <p class="muted" style="margin-bottom:10px;">Only verified scores for users with opt-in leaderboard visibility appear here.</p>
+          <div class="table-wrap"><table><thead><tr><th>Period</th><th>Rank</th><th>Public Alias</th><th>Verified Score</th><th>Remove</th></tr></thead><tbody id="lbTbody"></tbody></table></div>
+        </div>
+      `;
+      const tbody = $("lbTbody");
+      rows.forEach((r) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${escapeHtml(r.period)}</td><td>#${r.rank}</td><td>${escapeHtml(r.publicDisplayName)}</td><td>${r.verifiedScore}</td><td><button class="btn btn-sm btn-danger delLb">Remove</button></td>`;
+        tr.querySelector(".delLb").onclick = async () => {
+          const reason = prompt("Reason to remove leaderboard entry:");
+          if (!reason || reason.trim().length < 2) return;
+          await deleteDoc(doc(db, "leaderboardEntries", r.id));
+          await writeAuditLog("REMOVE_LEADERBOARD_ENTRY", "leaderboardEntries", r.id, reason);
+          renderSection();
+        };
+        tbody.appendChild(tr);
+      });
+    }
+
+    // 13. REWARDS CATALOGUE
+    async function renderRewards(root) {
+      const snap = await getDocs(collection(db, "rewards"));
+      const items = [];
+      snap.forEach((d) => items.push({ id: d.id, ...d.data() }));
+      root.innerHTML = `
+        <div class="card">
+          <h3>Add / Edit Reward Catalogue Item</h3>
+          <p class="muted" style="margin-bottom:10px;">Never place real gift card PINs or secrets inside public <span class="mono">rewards</span> documents. Fulfilment occurs privately after verification.</p>
+          <form id="rewForm" class="grid-2">
+            <div class="field"><label>Reward ID</label><input id="rwId" required placeholder="gc_amazon_100" /></div>
+            <div class="field"><label>Title</label><input id="rwTitle" required /></div>
+            <div class="field"><label>Category</label><input id="rwCat" required value="Gift Voucher" /></div>
+            <div class="field"><label>Delivery Type</label><input id="rwDel" required value="MANUAL_REVIEW" /></div>
+            <div class="field"><label>Coins Cost (min 10)</label><input id="rwCost" type="number" min="10" value="1000" /></div>
+            <div class="field"><label>Available Stock</label><input id="rwStock" type="number" min="0" value="25" /></div>
+            <div class="field"><label>Image HTTPS URL (optional)</label><input id="rwImg" type="url" /></div>
+            <div class="field"><label>Status</label><select id="rwStatus"><option>ACTIVE</option><option>INACTIVE</option><option>OUT_OF_STOCK</option></select></div>
+            <div class="field" style="grid-column:1/-1;"><label>Description</label><textarea id="rwDesc" required>Reviewed within 3–5 business days after verification.</textarea></div>
+            <div class="field" style="grid-column:1/-1;"><label>Audit Reason</label><input id="rwReason" required value="Catalogue update" /></div>
+            <div style="grid-column:1/-1;"><button class="btn btn-primary" type="submit">Save Reward</button></div>
+          </form>
+        </div>
+        <div class="card">
+          <h3>Catalogue (${items.length})</h3>
+          <div class="table-wrap"><table><thead><tr><th>Title</th><th>Category</th><th>Cost</th><th>Stock</th><th>Status</th><th>Edit</th></tr></thead><tbody id="rewTbody"></tbody></table></div>
+        </div>
+      `;
+      const tbody = $("rewTbody");
+      items.forEach((r) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td><strong>${escapeHtml(r.title)}</strong><br/><span class="mono muted">${escapeHtml(r.id)}</span></td><td>${escapeHtml(r.category)}</td><td>${r.pointsCost} coins</td><td>${r.stock}</td><td><span class="badge ${r.status === "ACTIVE" ? "ok" : "warn"}">${escapeHtml(r.status)}</span></td><td><button class="btn btn-sm btn-ghost editRw">Edit</button></td>`;
+        tr.querySelector(".editRw").onclick = () => {
+          $("rwId").value = r.id; $("rwTitle").value = r.title || "";
+          $("rwCat").value = r.category || ""; $("rwDel").value = r.deliveryType || "MANUAL_REVIEW";
+          $("rwCost").value = r.pointsCost || 1000; $("rwStock").value = r.stock || 0;
+          $("rwImg").value = r.imageUrl || ""; $("rwStatus").value = r.status || "ACTIVE";
+          $("rwDesc").value = r.description || "";
+        };
+        tbody.appendChild(tr);
+      });
+      $("rewForm").onsubmit = async (e) => {
+        e.preventDefault();
+        const id = $("rwId").value.trim().replace(/[^a-zA-Z0-9_-]/g, "_");
+        const img = $("rwImg").value.trim();
+        await setDoc(doc(db, "rewards", id), {
+          title: $("rwTitle").value.trim(),
+          category: $("rwCat").value.trim(),
+          deliveryType: $("rwDel").value.trim(),
+          pointsCost: parseInt($("rwCost").value, 10),
+          stock: parseInt($("rwStock").value, 10),
+          ...(isValidHttps(img) ? { imageUrl: img } : {}),
+          status: $("rwStatus").value,
+          description: $("rwDesc").value.trim(),
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+        await writeAuditLog("UPSERT_REWARD_ITEM", "rewards", id, $("rwReason").value);
+        showToast("Reward item saved.");
+        renderSection();
+      };
+    }
+
+    // 14. REDEMPTION REQUESTS
+    async function renderRedemptions(root) {
+      const snap = await getDocs(query(collection(db, "redemptions"), orderBy("createdAt", "desc"), limit(100)));
+      const rows = [];
+      snap.forEach((d) => rows.push({ id: d.id, ...d.data() }));
+      root.innerHTML = `
+        <div class="card">
+          <h3>Redemption Queue (${rows.length})</h3>
+          <p class="muted" style="margin-bottom:10px;">Status updates route through <span class="mono">/processRedemption</span> so rejections atomically refund held coins and log immutable ledger entries.</p>
+          <div class="table-wrap"><table><thead><tr><th>Request</th><th>User UID</th><th>Reward</th><th>Cost</th><th>Status</th><th>Admin Actions</th></tr></thead><tbody id="redTbody"></tbody></table></div>
+        </div>
+      `;
+      const tbody = $("redTbody");
+      rows.forEach((r) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td class="mono">${escapeHtml(r.id)}<br/><span class="muted">${escapeHtml(fmtTs(r.createdAt))}</span></td>
+          <td class="mono">${escapeHtml(r.uid)}</td>
+          <td><strong>${escapeHtml(r.rewardTitle)}</strong><br/><span class="muted">${escapeHtml(r.deliveryHint || "")}</span></td>
+          <td>${r.pointsCost}</td>
+          <td><span class="badge ${r.status === "DELIVERED" ? "ok" : r.status === "REJECTED" ? "err" : "warn"}">${escapeHtml(r.status)}</span></td>
+          <td style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button class="btn btn-sm btn-primary actBtn" data-s="APPROVED">Approve</button>
+            <button class="btn btn-sm btn-ghost actBtn" data-s="PROCESSING">Processing</button>
+            <button class="btn btn-sm btn-success actBtn" data-s="DELIVERED">Delivered</button>
+            <button class="btn btn-sm btn-danger actBtn" data-s="REJECTED">Reject & Refund</button>
+          </td>
+        `;
+        tr.querySelectorAll(".actBtn").forEach((b) => {
+          b.onclick = async () => {
+            const reason = prompt(`Mandatory reason for setting ${r.id} to ${b.dataset.s}:`);
+            if (!reason || reason.trim().length < 2) return showToast("Reason required.");
+            try {
+              const res = await callCloudFunction("processRedemption", {
+                requestId: r.id,
+                newStatus: b.dataset.s,
+                reason: reason.trim()
+              });
+              showToast(res.message || "Redemption updated.");
+              renderSection();
+            } catch (err) {
+              showToast("Cloud Function error: " + err.message);
+            }
+          };
+        });
+        tbody.appendChild(tr);
+      });
+    }
+
+    // 15. TRANSACTIONS / POINTS LEDGER
+    async function renderTransactions(root) {
+      const snap = await getDocs(query(collection(db, "pointTransactions"), orderBy("serverCreatedAt", "desc"), limit(150)));
+      const rows = [];
+      snap.forEach((d) => rows.push({ id: d.id, ...d.data() }));
+      root.innerHTML = `
+        <div class="card">
+          <div class="card-header">
+            <h3>Immutable Points Ledger (${rows.length} recent)</h3>
+            <button id="exportLedgerBtn" class="btn btn-ghost btn-sm">Export CSV</button>
+          </div>
+          <div class="table-wrap"><table><thead><tr><th>Tx ID</th><th>UID</th><th>Activity</th><th>Coins</th><th>Bucket</th><th>Description</th><th>Time</th></tr></thead><tbody>
+            ${rows.map((t) => `<tr><td class="mono">${escapeHtml(t.id)}</td><td class="mono">${escapeHtml(t.uid)}</td><td>${escapeHtml(t.activityType)}</td><td><span class="badge ${t.transactionType === "CREDIT" ? "ok" : "err"}">${t.transactionType === "CREDIT" ? "+" : "-"}${t.points ?? 0}</span></td><td>${escapeHtml(t.balanceCategory || "AVAILABLE")}</td><td>${escapeHtml(t.description)}</td><td>${escapeHtml(fmtTs(t.serverCreatedAt))}</td></tr>`).join("")}
+          </tbody></table></div>
+        </div>
+      `;
+      $("exportLedgerBtn").onclick = () => downloadCsv(
+        "rewardx-ledger.csv",
+        ["id", "uid", "transactionType", "activityType", "points", "balanceCategory", "description"],
+        rows.map((t) => [t.id, t.uid, t.transactionType, t.activityType, t.points ?? 0, t.balanceCategory, t.description])
+      );
+    }
+
+    // 16. CLOUD NOTIFICATIONS
+    async function renderNotifications(root) {
+      const snap = await getDocs(query(collection(db, "notificationCampaigns"), orderBy("createdAt", "desc"), limit(30)));
+      const campaigns = [];
+      snap.forEach((d) => campaigns.push({ id: d.id, ...d.data() }));
+      root.innerHTML = `
+        <div class="grid-2">
+          <div class="card">
+            <h3>Compose Cloud Notification</h3>
+            <form id="notifForm">
+              <div class="field"><label>Title</label><input id="nTitle" required maxlength="80" value="New Daily Challenge Live" /></div>
+              <div class="field"><label>Message Body</label><textarea id="nBody" required maxlength="240">Check out today's refreshed Maths Quiz and Games Zone challenges.</textarea></div>
+              <div class="field"><label>Safe In-App Destination</label>
+                <select id="nDest">
+                  <option value="home">home</option><option value="earn">earn</option><option value="games">games</option>
+                  <option value="videos">videos</option><option value="quiz">quiz</option><option value="scratch">scratch</option>
+                  <option value="spin">spin</option><option value="checkin">checkin</option><option value="redeem">redeem</option>
+                  <option value="notifications">notifications</option>
+                </select>
+              </div>
+              <div class="field"><label>Target UID (leave blank to broadcast to active users)</label><input id="nUid" placeholder="Optional single user UID" /></div>
+              <button class="btn btn-orange" type="submit">Confirm & Dispatch Notification</button>
+            </form>
+          </div>
+          <div class="card">
+            <h3>Android Notification Preview</h3>
+            <div class="notif-preview" style="margin-top:12px;">
+              <div style="font-size:0.75rem;color:var(--bright-blue);margin-bottom:4px;">RewardX • Now</div>
+              <div id="nPrevTitle" style="font-weight:700;">New Daily Challenge Live</div>
+              <div id="nPrevBody" class="muted" style="font-size:0.85rem;margin-top:3px;">Check out today's refreshed Maths Quiz and Games Zone challenges.</div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Campaign History (${campaigns.length})</h3>
+          <div class="table-wrap"><table><thead><tr><th>Title</th><th>Destination</th><th>Target</th><th>Sent By</th><th>Created</th></tr></thead><tbody>
+            ${campaigns.map((c) => `<tr><td><strong>${escapeHtml(c.title)}</strong><br/><span class="muted">${escapeHtml(c.body)}</span></td><td class="mono">${escapeHtml(c.safeDestination)}</td><td class="mono">${escapeHtml(c.audienceType || c.targetUid || "BROADCAST")}</td><td class="mono">${escapeHtml(c.createdBy || c.actorUid || "—")}</td><td>${escapeHtml(fmtTs(c.createdAt))}</td></tr>`).join("")}
+          </tbody></table></div>
+        </div>
+      `;
+      $("nTitle").oninput = (e) => { $("nPrevTitle").textContent = e.target.value; };
+      $("nBody").oninput = (e) => { $("nPrevBody").textContent = e.target.value; };
+      $("notifForm").onsubmit = async (e) => {
+        e.preventDefault();
+        const title = $("nTitle").value.trim();
+        const body = $("nBody").value.trim();
+        const targetUid = $("nUid").value.trim();
+        if (!confirm(`Send notification "${title}" to ${targetUid || "ALL active users"}?`)) return;
+        try {
+          const res = await callCloudFunction("sendAdminNotification", {
+            title, body, safeDestination: $("nDest").value, targetUid: targetUid || null
+          });
+          showToast(res.message || "Notification dispatched.");
+          renderSection();
+        } catch (err) {
+          showToast("Dispatch error: " + err.message);
+        }
+      };
+    }
+
+    // 17. APP UPDATE
+    async function renderAppUpdate(root) {
+      const p = state.publicConfig;
+      root.innerHTML = `
+        <div class="card">
+          <h3>App Update & Force Upgrade Rules</h3>
+          <form id="updForm" class="grid-2" style="margin-top:10px;">
+            <div class="field"><label>Latest Version Code</label><input id="uLatestCode" type="number" min="1" value="${p.latestVersionCode || 1}" /></div>
+            <div class="field"><label>Latest Version Name</label><input id="uLatestName" value="${escapeHtml(p.latestVersionName || "1.0.0")}" /></div>
+            <div class="field"><label>Minimum Supported Version Code (force update below this)</label><input id="uMinCode" type="number" min="1" value="${p.minimumSupportedVersionCode || 1}" /></div>
+            <div class="field"><label>Play Store Update HTTPS URL</label><input id="uUrl" type="url" value="${escapeHtml(p.updateUrl || "")}" placeholder="https://play.google.com/store/apps/details?id=com.rewardx.app" /></div>
+            <div class="field" style="grid-column:1/-1;"><label>Audit Reason</label><input id="uReason" required value="Updated version thresholds" /></div>
+            <div><button class="btn btn-primary" type="submit">Save App Update Config</button></div>
+          </form>
+        </div>
+      `;
+      $("updForm").onsubmit = async (e) => {
+        e.preventDefault();
+        const u = $("uUrl").value.trim();
+        if (u && !isValidHttps(u)) return showToast("Update URL must be HTTPS or blank.");
+        await setDoc(doc(db, "publicConfig", "current"), {
+          ...p,
+          latestVersionCode: parseInt($("uLatestCode").value, 10),
+          latestVersionName: $("uLatestName").value.trim(),
+          minimumSupportedVersionCode: parseInt($("uMinCode").value, 10),
+          updateUrl: u,
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+        await writeAuditLog("UPDATE_APP_VERSION", "publicConfig", "current", $("uReason").value);
+        showToast("App Update config saved.");
+      };
+    }
+
+    // 18. BANNERS
+    async function renderBanners(root) {
+      const snap = await getDocs(collection(db, "banners"));
+      const rows = [];
+      snap.forEach((d) => rows.push({ id: d.id, ...d.data() }));
+      root.innerHTML = `
+        <div class="card">
+          <h3>Create / Edit Home Banner</h3>
+          <form id="banForm" class="grid-2" style="margin-top:10px;">
+            <div class="field"><label>Banner ID</label><input id="bnId" required placeholder="banner_welcome" /></div>
+            <div class="field"><label>Title</label><input id="bnTitle" required /></div>
+            <div class="field"><label>Subtitle</label><input id="bnSub" required /></div>
+            <div class="field"><label>Destination Screen</label><select id="bnDest"><option>earn</option><option>games</option><option>videos</option><option>quiz</option><option>scratch</option><option>spin</option><option>checkin</option><option>redeem</option></select></div>
+            <div class="field"><label>Status</label><select id="bnStat"><option>ACTIVE</option><option>INACTIVE</option></select></div>
+            <div class="field"><label>Sort Order</label><input id="bnSort" type="number" value="1" /></div>
+            <div style="grid-column:1/-1;"><button class="btn btn-primary" type="submit">Save Banner</button></div>
+          </form>
+        </div>
+        <div class="card">
+          <h3>Banners (${rows.length})</h3>
+          <div class="table-wrap"><table><thead><tr><th>Title</th><th>Message</th><th>Destination</th><th>Status</th></tr></thead><tbody>
+            ${rows.map((b) => `<tr><td><strong>${escapeHtml(b.title)}</strong><br/><span class="mono muted">${escapeHtml(b.id)}</span></td><td>${escapeHtml(b.message || b.subtitle || "")}</td><td class="mono">${escapeHtml(b.safeDestination)}</td><td><span class="badge ${b.status === "ACTIVE" ? "ok" : "warn"}">${escapeHtml(b.status)}</span></td></tr>`).join("")}
+          </tbody></table></div>
+        </div>
+      `;
+      $("banForm").onsubmit = async (e) => {
+        e.preventDefault();
+        const id = $("bnId").value.trim().replace(/[^a-zA-Z0-9_-]/g, "_");
+        await setDoc(doc(db, "banners", id), {
+          title: $("bnTitle").value.trim(),
+          message: $("bnSub").value.trim(),
+          badgeText: "UPDATE",
+          safeDestination: $("bnDest").value,
+          status: $("bnStat").value,
+          sortOrder: parseInt($("bnSort").value, 10),
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+        await writeAuditLog("UPSERT_BANNER", "banners", id, "Updated home banner");
+        showToast("Banner saved.");
+        renderSection();
+      };
+    }
+
+    // 19. ADMOB SETTINGS
+    async function renderAdmob(root) {
+      const p = state.publicConfig;
+      const adCfg = state.rewardConfigs.AD_BONUS || { enabled: true, bonusAmount: 1, dailyLimit: 5, version: 1 };
+      root.innerHTML = `
+        <div class="card">
+          <h3>AdMob Placement Controls</h3>
+          <div class="alert">Policy Guardrail: AdMob rewarded ads are strictly voluntary and grant only separate non-transferable <span class="mono">adBonusPoints</span>. Core redemptions are never gated behind ads.</div>
+          <form id="adForm">
+            <div class="checkbox-row"><input id="adBan" type="checkbox" ${p.adBannerEnabled !== false ? "checked" : ""}/><span>Banner Ads Enabled (safe bottom spacing)</span></div>
+            <div class="checkbox-row"><input id="adInt" type="checkbox" ${p.adInterstitialEnabled ? "checked" : ""}/><span>Interstitial Ads Enabled (post-completion transition only)</span></div>
+            <div class="checkbox-row"><input id="adRew" type="checkbox" ${p.adRewardedEnabled !== false ? "checked" : ""}/><span>Voluntary Rewarded Ads Enabled</span></div>
+            <div class="checkbox-row"><input id="adOpen" type="checkbox" ${p.adAppOpenEnabled ? "checked" : ""}/><span>App Open Ads Enabled (strictly frequency capped)</span></div>
+            <div class="grid-2" style="margin-top:12px;">
+              <div class="field"><label>Voluntary Ad Bonus Points per Watch</label><input id="adPts" type="number" min="0" max="20" value="${adCfg.bonusAmount ?? 1}" /></div>
+              <div class="field"><label>Daily Voluntary Ad Bonus Cap</label><input id="adCap" type="number" min="0" max="50" value="${adCfg.dailyLimit ?? 5}" /></div>
+            </div>
+            <button class="btn btn-primary" type="submit">Save AdMob Settings</button>
+          </form>
+        </div>
+      `;
+      $("adForm").onsubmit = async (e) => {
+        e.preventDefault();
+        await setDoc(doc(db, "publicConfig", "current"), {
+          ...p,
+          adBannerEnabled: $("adBan").checked,
+          adInterstitialEnabled: $("adInt").checked,
+          adRewardedEnabled: $("adRew").checked,
+          adAppOpenEnabled: $("adOpen").checked,
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+        await setDoc(doc(db, "rewardConfigs", "AD_BONUS"), {
+          activityType: "AD_BONUS",
+          enabled: $("adRew").checked,
+          bonusAmount: parseInt($("adPts").value, 10),
+          dailyLimit: parseInt($("adCap").value, 10),
+          version: Number(adCfg.version || 0) + 1,
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+        await writeAuditLog("UPDATE_ADMOB", "publicConfig", "current", "Updated AdMob controls");
+        showToast("AdMob settings saved.");
+      };
+    }
+
+    // 20. REPORTS / ANALYTICS
+    async function renderReports(root) {
+      const snap = await getDocs(query(collection(db, "dailyAnalytics"), orderBy("__name__", "desc"), limit(60)));
+      const rows = [];
+      snap.forEach((d) => rows.push({ id: d.id, ...d.data() }));
+      root.innerHTML = `
+        <div class="card">
+          <div class="card-header">
+            <h3>Daily Analytics Snapshots (${rows.length})</h3>
+            <button id="exportAnalyticsBtn" class="btn btn-ghost btn-sm">Export Sanitized CSV</button>
+          </div>
+          <div class="table-wrap"><table><thead><tr><th>UTC Date</th><th>Total Users</th><th>Pending Redemptions</th><th>Verified Transactions</th></tr></thead><tbody>
+            ${rows.map((r) => `<tr><td class="mono">${escapeHtml(r.id)}</td><td>${r.totalUsers || 0}</td><td>${r.pendingRedemptions || 0}</td><td>${r.verifiedTransactions || 0}</td></tr>`).join("")}
+          </tbody></table></div>
+        </div>
+      `;
+      $("exportAnalyticsBtn").onclick = () => downloadCsv(
+        "rewardx-analytics.csv",
+        ["date", "totalUsers", "pendingRedemptions", "verifiedTransactions"],
+        rows.map((r) => [r.id, r.totalUsers || 0, r.pendingRedemptions || 0, r.verifiedTransactions || 0])
+      );
+    }
+
+    // 21. SUPPORT / FEEDBACK
+    async function renderSupport(root) {
+      const snap = await getDocs(query(collection(db, "supportTickets"), orderBy("createdAt", "desc"), limit(100)));
+      const rows = [];
+      snap.forEach((d) => rows.push({ id: d.id, ...d.data() }));
+      root.innerHTML = `
+        <div class="card">
+          <h3>Support & Feedback Tickets (${rows.length})</h3>
+          <div class="table-wrap"><table><thead><tr><th>Ticket</th><th>User UID</th><th>Category / Subject</th><th>Message</th><th>Status</th><th>Update</th></tr></thead><tbody id="supTbody"></tbody></table></div>
+        </div>
+      `;
+      const tbody = $("supTbody");
+      rows.forEach((t) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td class="mono">${escapeHtml(t.id)}<br/><span class="muted">${escapeHtml(fmtTs(t.createdAt))}</span></td>
+          <td class="mono">${escapeHtml(t.uid)}</td>
+          <td><strong>${escapeHtml(t.subject)}</strong><br/><span class="muted">${escapeHtml(t.category)}</span></td>
+          <td style="max-width:300px;">${escapeHtml(t.message)}</td>
+          <td><span class="badge ${t.status === "RESOLVED" ? "ok" : "warn"}">${escapeHtml(t.status)}</span></td>
+          <td>
+            <button class="btn btn-sm btn-primary resBtn" data-s="IN_PROGRESS">In Progress</button>
+            <button class="btn btn-sm btn-success resBtn" data-s="RESOLVED">Resolve</button>
+          </td>
+        `;
+        tr.querySelectorAll(".resBtn").forEach((b) => {
+          b.onclick = async () => {
+            const note = prompt("Admin reply / internal note:");
+            if (note === null) return;
+            await updateDoc(doc(db, "supportTickets", t.id), {
+              status: b.dataset.s,
+              adminReply: note.trim(),
+              updatedAt: serverTimestamp()
+            });
+            await writeAuditLog("UPDATE_SUPPORT_TICKET", "supportTickets", t.id, `Set status ${b.dataset.s}`);
+            showToast("Ticket updated.");
+            renderSection();
+          };
+        });
+        tbody.appendChild(tr);
+      });
+    }
+
+    // 22. LEGAL PAGES / URLS
+    async function renderLegal(root) {
+      const p = state.publicConfig;
+      root.innerHTML = `
+        <div class="card">
+          <h3>Published Legal & Policy URLs (HTTPS)</h3>
+          <form id="legalForm" style="margin-top:10px;">
+            <div class="field"><label>Privacy Policy URL</label><input id="lPriv" type="url" value="${escapeHtml(p.privacyUrl || "")}" placeholder="https://yourdomain.com/privacy" /></div>
+            <div class="field"><label>Terms of Use URL</label><input id="lTerms" type="url" value="${escapeHtml(p.termsUrl || "")}" placeholder="https://yourdomain.com/terms" /></div>
+            <div class="field"><label>Published Reward Rules URL</label><input id="lRules" type="url" value="${escapeHtml(p.rewardRulesUrl || "")}" placeholder="https://yourdomain.com/reward-rules" /></div>
+            <div class="field"><label>Support Portal URL</label><input id="lSup" type="url" value="${escapeHtml(p.supportUrl || "")}" placeholder="https://yourdomain.com/support" /></div>
+            <button class="btn btn-primary" type="submit">Save Legal URLs</button>
+          </form>
+        </div>
+      `;
+      $("legalForm").onsubmit = async (e) => {
+        e.preventDefault();
+        const urls = [$("lPriv").value.trim(), $("lTerms").value.trim(), $("lRules").value.trim(), $("lSup").value.trim()];
+        if (urls.some((u) => u && !isValidHttps(u))) return showToast("All non-empty URLs must start with https://");
+        await setDoc(doc(db, "publicConfig", "current"), {
+          ...p,
+          privacyUrl: urls[0], termsUrl: urls[1], rewardRulesUrl: urls[2], supportUrl: urls[3],
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+        await writeAuditLog("UPDATE_LEGAL_URLS", "publicConfig", "current", "Updated legal & policy URLs");
+        showToast("Legal URLs saved.");
+      };
+    }
+
+    // 23. APP SETTINGS
+    async function renderAppSettings(root) {
+      const p = state.publicConfig;
+      root.innerHTML = `
+        <div class="card">
+          <h3>General App & Backend Settings</h3>
+          <form id="appSetForm" style="margin-top:10px;">
+            <div class="field"><label>Deployed Cloud Functions HTTPS Base URL</label><input id="sApi" type="url" value="${escapeHtml(p.apiBaseUrl || "")}" placeholder="https://us-central1-gen-lang-client-0350068564.cloudfunctions.net" /></div>
+            <div class="field"><label>Default Language</label><input id="sLang" value="${escapeHtml(p.defaultLanguage || "en")}" /></div>
+            <div class="field"><label>Audit Reason</label><input id="sReason" required value="Updated backend API & general settings" /></div>
+            <button class="btn btn-primary" type="submit">Save App Settings</button>
+          </form>
+        </div>
+      `;
+      $("appSetForm").onsubmit = async (e) => {
+        e.preventDefault();
+        const api = $("sApi").value.trim().replace(/\/+$/, "");
+        if (api && !isValidHttps(api)) return showToast("Cloud Functions URL must be HTTPS.");
+        await setDoc(doc(db, "publicConfig", "current"), {
+          ...p,
+          apiBaseUrl: api,
+          defaultLanguage: $("sLang").value.trim() || "en",
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+        await writeAuditLog("UPDATE_APP_SETTINGS", "publicConfig", "current", $("sReason").value);
+        showToast("App settings saved.");
+      };
+    }
+
+    // 24. ADMIN ROLES
+    async function renderAdminRoles(root) {
+      const snap = await getDocs(collection(db, "admins"));
+      const rows = [];
+      snap.forEach((d) => rows.push({ id: d.id, ...d.data() }));
+      root.innerHTML = `
+        <div class="card">
+          <h3>Add / Update Admin Role (Super-Admin Only)</h3>
+          <form id="admForm" class="grid-2" style="margin-top:10px;">
+            <div class="field"><label>Firebase Auth UID</label><input id="aUid" required /></div>
+            <div class="field"><label>Email</label><input id="aEmail" type="email" required /></div>
+            <div class="field"><label>Role</label><select id="aRole"><option>SUPER_ADMIN</option><option>MODERATOR</option><option>SUPPORT</option></select></div>
+            <div class="checkbox-row"><input id="aAct" type="checkbox" checked /><span>Active</span></div>
+            <div style="grid-column:1/-1;"><button class="btn btn-primary" type="submit">Save Admin Role</button></div>
+          </form>
+        </div>
+        <div class="card">
+          <h3>Configured Admin Accounts (${rows.length})</h3>
+          <div class="table-wrap"><table><thead><tr><th>UID</th><th>Email</th><th>Role</th><th>Active</th></tr></thead><tbody>
+            ${rows.map((a) => `<tr><td class="mono">${escapeHtml(a.id)}</td><td>${escapeHtml(a.email)}</td><td><span class="badge">${escapeHtml(a.role)}</span></td><td>${a.active ? "YES" : "NO"}</td></tr>`).join("")}
+          </tbody></table></div>
+        </div>
+      `;
+      $("admForm").onsubmit = async (e) => {
+        e.preventDefault();
+        const uid = $("aUid").value.trim();
+        await setDoc(doc(db, "admins", uid), {
+          uid,
+          email: $("aEmail").value.trim(),
+          role: $("aRole").value,
+          active: $("aAct").checked,
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+        await writeAuditLog("UPSERT_ADMIN_ROLE", "admins", uid, `Assigned ${$("aRole").value}`);
+        showToast("Admin role updated.");
+        renderSection();
+      };
+    }
+
+    // 25. AUDIT LOGS
+    async function renderAuditLogs(root) {
+      const snap = await getDocs(query(collection(db, "adminAuditLogs"), orderBy("createdAt", "desc"), limit(150)));
+      const rows = [];
+      snap.forEach((d) => rows.push({ id: d.id, ...d.data() }));
+      root.innerHTML = `
+        <div class="card">
+          <h3>Append-Only Admin Audit Logs (${rows.length})</h3>
+          <div class="table-wrap"><table><thead><tr><th>Time</th><th>Actor</th><th>Action</th><th>Target</th><th>Reason</th></tr></thead><tbody>
+            ${rows.map((l) => `<tr><td>${escapeHtml(fmtTs(l.createdAt))}</td><td class="mono">${escapeHtml(l.actorEmail || l.actorUid)}<br/><span class="muted">${escapeHtml(l.actorRole)}</span></td><td><span class="badge">${escapeHtml(l.actionType)}</span></td><td class="mono">${escapeHtml(l.targetType)}/${escapeHtml(l.targetId)}</td><td>${escapeHtml(l.reason)}</td></tr>`).join("")}
+          </tbody></table></div>
+        </div>
+      `;
+    }
+
+    // 26. MAINTENANCE MODE
+    async function renderMaintenance(root) {
+      const p = state.publicConfig;
+      root.innerHTML = `
+        <div class="card">
+          <h3>Maintenance Mode Control</h3>
+          <div class="alert warn">Enabling Maintenance Mode immediately routes all Android app screens to the Maintenance screen without requiring an app update.</div>
+          <form id="mForm">
+            <div class="checkbox-row"><input id="mMode" type="checkbox" ${p.maintenanceMode ? "checked" : ""}/><span><strong>Maintenance Mode Active</strong></span></div>
+            <div class="field"><label>User-Facing Maintenance Message</label><textarea id="mMsg">${escapeHtml(p.maintenanceMessage || "RewardX is undergoing scheduled maintenance. Please check back shortly.")}</textarea></div>
+            <div class="field"><label>Mandatory Audit Reason</label><input id="mReason" required placeholder="e.g. Scheduled backend upgrade" /></div>
+            <button class="btn btn-danger" type="submit">Apply Maintenance Setting</button>
+          </form>
+        </div>
+      `;
+      $("mForm").onsubmit = async (e) => {
+        e.preventDefault();
+        const active = $("mMode").checked;
+        if (!confirm(`Confirm setting Maintenance Mode to ${active ? "ON" : "OFF"}?`)) return;
+        await setDoc(doc(db, "publicConfig", "current"), {
+          ...p,
+          maintenanceMode: active,
+          maintenanceMessage: $("mMsg").value.trim(),
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+        await writeAuditLog("TOGGLE_MAINTENANCE", "publicConfig", "current", $("mReason").value, { maintenanceMode: p.maintenanceMode }, { maintenanceMode: active });
+        showToast(`Maintenance mode is now ${active ? "ON" : "OFF"}.`);
+        renderSection();
+      };
+    }
+  </script>
+</body>
+</html>
